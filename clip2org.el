@@ -113,8 +113,7 @@ clip2org-include-pdf-folder."
            "\n\\(.*?\\)\n==========" end t 1)
           (setq content (match-string 1)))
       (when (equal title "==========")
-        (error (concat "Clip2org: failed in getting content or quoted text\n loc:" loc
-                       "header: " header)))
+        (error "Clip2org: failed in getting content or quoted text. loc: \"%s\" header: \"%s\" date: \"%s\"" loc header date))
       (message (format "Clip2org: now processing \"%s\"" title))
       (forward-line)
 
