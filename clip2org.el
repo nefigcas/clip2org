@@ -102,7 +102,7 @@ clip2org-include-pdf-folder."
         (setq header (match-string 1)))
       (beginning-of-line)
       ;;FIXME: pages can be roman numerals also.
-      (when (re-search-forward "Page \\([0-9-]+\\)" end t 1)
+      (when (re-search-forward "Page \\([0-9-IVXLCM]+\\)" end t 1)
         (setq page (match-string 1)))
       (when (re-search-forward "Loc.*? \\([0-9-]+\\)" end t 1)
         (setq loc (match-string 1)))
@@ -113,7 +113,7 @@ clip2org-include-pdf-folder."
            "\n\\(.*?\\)\n==========" end t 1)
           (setq content (match-string 1)))
       (when (equal title "==========")
-        (error (format "Clip2org: Failed. loc: \"%s\" header: \"%s\" date: \"%s\"" loc header date)))
+        (error (format "Clip2org: Failed. type: \"%s\" content: \"%s\"" type content)))
       (message (format "Clip2org: now processing \"%s\"" title))
       (forward-line)
 
