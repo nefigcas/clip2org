@@ -118,8 +118,8 @@ See also clip2org-include-pdf-folder."
            "\n\\(.*?\\)\n==========" end t 1)
           (setq content (match-string 1)))
       (when (equal title "==========")
-        (error (format "Clip2org: Failed. type: \"%s\" content: \"%s\""
-                       (concat type "end-point: " end) content)))
+        (error (format "Clip2org: Failed. start: \"%s\" end: \"%s\""
+                        start end)))
       (message (format "Clip2org: now processing \"%s\"" title))
       (rst-forward-line)
       ;; Return assoc list
