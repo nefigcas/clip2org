@@ -49,8 +49,13 @@
 ;;
 ;;     M-x clip2org
 ;;
-;;; Code
-(defgroup clip2org nil "clip2org group"
+;; Package-Requires: ((emacs "25.1"))
+;;; Code:
+(require 'cl-lib)
+;;(require 'compat)
+;;(require 'org)
+
+(defgroup clip2org nil "Clip2Org Group."
   :group 'org)
 
 (defcustom clip2org-clippings-file
@@ -60,8 +65,8 @@
   :group 'clip2org)
 
 (defcustom clip2org-include-pdf-links nil
-  "If t, add PDF page links under each clipping. See also
-clip2org-include-pdf-folder."
+  "If t, add PDF page links under each clipping.
+See also clip2org-include-pdf-folder."
   :type 'boolean
   :group 'clip2org)
 
@@ -87,6 +92,7 @@ clip2org-include-pdf-folder."
   :group 'clip2org)
 
 (defun clip2org-get-next-book-as-list ()
+  "Regexp search and match according to My Clippings.txt syntax."
   (let (title type header loc date page start end content)
     (setq start (point))
     (when (re-search-forward "==========" nil t 1)
@@ -101,7 +107,6 @@ clip2org-include-pdf-folder."
       (when (re-search-forward "- \\(.*\\)|" end t 1)
         (setq header (match-string 1)))
       (beginning-of-line)
-      ;;FIXME: pages can be roman numerals also.
       (when (re-search-forward "Page \\([0-9-IVXLCM]+\\)" end t 1)
         (setq page (match-string 1)))
       (when (re-search-forward "Loc.*? \\([0-9-]+\\)" end t 1)
@@ -127,7 +132,8 @@ clip2org-include-pdf-folder."
         (header . ,header)))))
 
 (defun clip2org-convert-to-org (clist all)
-  "Process clip2org-alist and generate the output buffer."
+  "Process clip2org-alist and generate the output buffer.
+CLIST ALL"
   (with-current-buffer (get-buffer-create "*clippings*")
     (delete-region (point-min) (point-max))
     (org-mode)
@@ -180,9 +186,9 @@ clip2org-include-pdf-folder."
   (switch-to-buffer "*clippings*"))
 
 (defun clip2org-append-to-alist-key (key value alist)
-  "Append a value to the key part of an alist. This function is
-used to create associated lists. If Key is not found, add new key
-to the list"
+  "Append a VALUE to the KEY part of ALIST an.
+This function is used to create associated lists.
+If Key is not found, add new key to the list"
   (let ((templ) (results) (found))
     (while alist
       ;; check if key is already in list
@@ -203,7 +209,7 @@ to the list"
     results))
 
 (defun clip2org--save-last-run-timestamp (&optional timestamp)
-  "Save the timestamp to last-run file."
+  "Save the TIMESTAMP to last-run file."
   (with-temp-file clip2org-persistence-file
     (org-insert-time-stamp (or timestamp (current-time)) t t)))
 
@@ -214,12 +220,12 @@ Returns nil if there is no data for last run."
   (when (file-exists-p clip2org-persistence-file)
     (with-temp-buffer
       (save-match-data
-        (insert-file clip2org-persistence-file)
+        (insert-file-contents clip2org-persistence-file)
         (when (org-at-timestamp-p t)
           (match-string 1))))))
 
 (defun clip2org--skip-clip (clip &optional last-run-ts)
-  "Return t if the clip should be skipped from the org tree"
+  "Return t if the CLIP should be skipped from the org tree."
   (and last-run-ts
        (cdr (assoc 'date clip))
        (time-less-p
@@ -227,7 +233,7 @@ Returns nil if there is no data for last run."
         last-run-ts)))
 
 (defun clip2org--parse-datetime (datetime)
-  "Parse datetime for a clipping. The format is like this:
+  "Parse DATETIME for a clipping. The format is like this:
 - Monday, July 8, 2019 11:15:29 PM
 - Tuesday, July 9, 2019 6:48:34 AM"
   (let* ((parsed-datetime (parse-time-string datetime))
