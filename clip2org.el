@@ -1,10 +1,10 @@
-;;; clip2org.el --- Convert Kindle's My Clippings.txt into Org
-
+;;; clip2org.el --- Convert Kindle's My Clippings.txt into Org -*- lexical-binding: t -*-
 ;; Author: Thamer Mahmoud <thamer.mahmoud@gmail.com>
 ;; Version: 1.1
 ;; Time-stamp: <2012-05-28 10:53:45 thamer>
 ;; URL: https://github.com/thamer/clip2org
-;; Keywords: Kindle, Org mode, Amazon, My Clippings.txt
+;; Keywords: matching, outlines, hardware
+;; Other Keywords: Kindle, Org mode, Amazon, My Clippings.txt
 ;; Compatibility: Tested on GNU Emacs 23.4 and 24.1
 ;; Copyright (C) 2012 Thamer Mahmoud, all rights reserved.
 
@@ -52,8 +52,8 @@
 ;; Package-Requires: ((emacs "25.1"))
 ;;; Code:
 (require 'cl-lib)
-;;(require 'compat)
-;;(require 'org)
+(require 'org)
+(require 'rst)
 
 (defgroup clip2org nil "Clip2Org Group."
   :group 'org)
@@ -118,10 +118,10 @@ See also clip2org-include-pdf-folder."
            "\n\\(.*?\\)\n==========" end t 1)
           (setq content (match-string 1)))
       (when (equal title "==========")
-        (error (format "Clip2org: Failed. type: \"%s\" content: \"%s\"" type content)))
+        (error (format "Clip2org: Failed. type: \"%s\" content: \"%s\""
+                       (concat type "end-point: " end) content)))
       (message (format "Clip2org: now processing \"%s\"" title))
-      (forward-line)
-
+      (rst-forward-line)
       ;; Return assoc list
       `((title . ,title)
         (type . ,type)
@@ -147,7 +147,7 @@ CLIST ALL"
       (dolist (book clist)
         (let ((note-list
                (cl-remove-if
-                '(lambda (x) (clip2org--skip-clip x last-run))
+                #'(lambda (x) (clip2org--skip-clip x last-run))
                 (cdr book))))
 
           (when note-list
@@ -173,7 +173,7 @@ CLIST ALL"
                     (org-insert-time-stamp (clip2org--parse-datetime date) nil t))
                   (insert "\n")
                   (when clip2org-clipping-tags
-                    (org-set-tags-to clip2org-clipping-tags))
+                    (org-set-tags clip2org-clipping-tags))
                   (insert (format "#+BEGIN_QUOTE\n%s\n#+END_QUOTE\n" content))
                   ;; Insert pdf link
                   (if (and clip2org-include-pdf-links page)
@@ -225,7 +225,8 @@ Returns nil if there is no data for last run."
           (match-string 1))))))
 
 (defun clip2org--skip-clip (clip &optional last-run-ts)
-  "Return t if the CLIP should be skipped from the org tree."
+  "Return t if the CLIP should be skipped from the org tree.
+LAST-RUN-TS is the timestamp of the last time that this was run"
   (and last-run-ts
        (cdr (assoc 'date clip))
        (time-less-p
